@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>talabat Pro — Key Account Profit Dashboard</title>
+<style>
+  :root{--orange:#FF6900;--ink:#1d2330;--muted:#6b7280;--bg:#f6f7f9;--card:#fff;--line:#e7e9ee;
+    --good:#137a4b;--goodbg:#e4f3ea;--bad:#c0392b;--badbg:#fdecea;--blue:#2563eb;--mathbg:#f0f6ff;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .logo{background:var(--orange);color:#fff;font-weight:800;padding:8px 12px;border-radius:10px;font-size:18px;letter-spacing:-.5px}
+  h1{font-size:20px;margin:0}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 16px}
+  .grid{display:grid;gap:16px}
+  .controls{grid-template-columns:repeat(3,1fr)} .kpis{grid-template-columns:repeat(4,1fr)} .pl{grid-template-columns:1fr 1fr}
+  @media(max-width:880px){.controls,.kpis,.pl{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  label{display:block;font-weight:600;margin-bottom:4px;font-size:13px}
+  .val{color:var(--orange);font-weight:800}
+  input[type=range]{width:100%;accent-color:var(--orange)}
+  .hint{color:var(--muted);font-size:11px;margin-top:2px}
+  .kpi{padding:14px}.kpi .big{font-size:25px;font-weight:800;margin:2px 0}
+  .kpi .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .delta{font-size:12px;font-weight:700}.up{color:var(--good)}.down{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-size:11px;text-transform:uppercase;border-bottom:2px solid var(--line)}
+  tr.total td{font-weight:800;border-top:2px solid var(--line);border-bottom:none}tr.total{background:var(--goodbg)}
+  tr.sub td{color:var(--muted);font-size:11.5px;border-bottom:1px dashed var(--line)}
+  .scn-btns{display:flex;flex-wrap:wrap;gap:8px}
+  .scn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:13px}
+  .scn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .bars{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .barrow{display:grid;grid-template-columns:130px 1fr 110px;align-items:center;gap:10px;font-size:13px}
+  .track{background:#eef0f4;border-radius:8px;height:22px;overflow:hidden}
+  .fill{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-weight:700;padding-right:6px;font-size:11px;white-space:nowrap}
+  .narrative{background:linear-gradient(180deg,#fff,#fffaf5);border:1px solid #ffd9b8}
+  .narrative h3{color:var(--orange)}
+  .verdict{font-weight:800;font-size:15px;margin:4px 0 8px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;margin-left:6px}
+  .pill.good{background:var(--goodbg);color:var(--good)}.pill.bad{background:var(--badbg);color:var(--bad)}
+  details{margin-top:12px;background:var(--mathbg);border:1px solid #d6e4fb;border-radius:10px;padding:0 12px}
+  details[open]{padding-bottom:10px}
+  summary{cursor:pointer;font-weight:700;color:var(--blue);padding:9px 0;font-size:13px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";}
+  details[open] summary::before{content:"▾ ";}
+  .math{font-size:12.5px;color:#33415c}
+  .math code{background:#fff;border:1px solid #d6e4fb;border-radius:4px;padding:1px 5px;font-size:12px}
+  .benefit{background:var(--goodbg);border:1px solid #bfe3cd;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+  .warn{background:var(--badbg);border:1px solid #f1c4bd;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+  .foot{color:var(--muted);font-size:11px;margin-top:18px;line-height:1.6}
+  .reset{float:right;font-size:12px;color:var(--blue);cursor:pointer;font-weight:700;border:none;background:none}
+  .lead{font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">talabat<span style="opacity:.85">Pro</span></div>
+    <div>
+      <h1>Key Account Profit — in plain numbers</h1>
+      <div class="sub">Click a scenario to load its settings into the sliders, or move the sliders yourself. Everything updates and explains itself. Illustrative monthly model, all figures AED.</div>
+    </div>
+  </header>
+
+  <div class="lead">
+    <b>The story in one line:</b> this account now gets ~48% of orders from talabat Pro (was 12%). They pay talabat a <b>4&nbsp;AED fee on each Pro order over 30&nbsp;AED</b>, so their total payment to talabat grew. They want to drop Pro or cut commission — but the 30&nbsp;AED minimum lifts basket sizes and brings loyal repeat customers, so their <b>actual profit went up</b>. Marketing spend now <b>earns its own orders</b> through an adjustable ROI. Below: by how much, why dropping Pro costs them <b>market share</b>, a <b>win-win</b> deal (C), and a <b>grow-the-basket</b> play (D).
+  </div>
+
+  <div class="benefit">
+    💡 <b>Why the 4&nbsp;AED fee isn&rsquo;t just a cost:</b> to skip the delivery charge a Pro customer must spend over 30&nbsp;AED — so they add items (bigger basket) — and Pro members come back more often as loyal, high-value regulars. That fee is buying higher order values and repeat customers.
+  </div>
+
+  <div class="warn">
+    ⚠️ <b>Dropping Pro is a market-share decision, not just an order count:</b> those loyal Pro customers don&rsquo;t disappear — they move to <b>competitors who offer Pro</b>. The brand loses visibility on the app and the lifetime value of its best regulars. The profit drop shown for &ldquo;Drop Pro&rdquo; is the <b>floor</b>; the real cost is ceding share to rivals.
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Jump to a scenario <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— loads the sliders below</span></h3>
+    <div class="scn-btns">
+      <button class="scn" data-s="base">A year ago</button>
+      <button class="scn active" data-s="cur">Now (no change)</button>
+      <button class="scn" data-s="A">A · Drop Pro</button>
+      <button class="scn" data-s="C">C · Structured win-win</button>
+      <button class="scn" data-s="D">D · Grow AOV (to 60)</button>
+    </div>
+  </div>
+
+  <div class="grid controls" style="margin-bottom:16px">
+    <div class="card">
+      <h3>How busy <button class="reset" onclick="reset()">reset</button></h3>
+      <label>Base orders / month <span class="val" id="o_v"></span></label>
+      <input type="range" id="orders" min="40000" max="150000" step="1000">
+      <div class="hint" id="ord_hint"></div>
+      <label style="margin-top:12px">Average bill (AED) <span class="val" id="a_v"></span></label>
+      <input type="range" id="aov" min="35" max="60" step="0.5">
+      <div class="hint">A year ago: AED 45 &middot; the 30 AED minimum lifts this &middot; higher AOV shrinks the Pro fee %</div>
+    </div>
+    <div class="card">
+      <h3>Marketing &amp; discounts (with ROI)</h3>
+      <label>Marketing / discounts (AED) <span class="val" id="m_v"></span></label>
+      <input type="range" id="mktg" min="0" max="500000" step="10000">
+      <div class="hint" id="mkt_hint"></div>
+      <label style="margin-top:12px">Marketing ROI <span class="val" id="r_v"></span></label>
+      <input type="range" id="roi" min="0" max="8" step="0.25">
+      <div class="hint" id="roi_hint"></div>
+      <label style="margin-top:12px">Pro share of orders <span class="val" id="p_v"></span></label>
+      <input type="range" id="pro" min="0" max="0.8" step="0.01">
+      <div class="hint">A year ago: 12% → now: 48% (+300%)</div>
+    </div>
+    <div class="card">
+      <h3>Commission, Pro fee &amp; the deals</h3>
+      <label>Standard commission <span class="val" id="c_v"></span></label>
+      <input type="range" id="comm" min="0.15" max="0.30" step="0.005">
+      <div class="hint">Standard rate. Option C trims it slightly (the rebate).</div>
+      <label style="margin-top:10px">Pro fee / Pro order <span class="val" id="cf_v"></span></label>
+      <input type="range" id="cofund" min="0" max="8" step="0.5">
+      <div class="hint">Today AED 4. Option C trims it to AED 3; Option D leaves it at AED 4.</div>
+      <label style="margin-top:10px">Extra orders Pro creates <span class="val" id="i_v"></span></label>
+      <input type="range" id="incr" min="0" max="1" step="0.05">
+      <div class="hint">Pro orders lost if Pro is dropped (Option A)</div>
+      <div class="hint" id="fee_hint" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="grid kpis" style="margin-bottom:16px">
+    <div class="card kpi"><div class="lbl">talabat&rsquo;s total cut</div><div class="big" id="k_take"></div><div class="delta" id="k_take_d"></div></div>
+    <div class="card kpi"><div class="lbl">Brand profit / month</div><div class="big" id="k_con"></div><div class="delta" id="k_con_d"></div></div>
+    <div class="card kpi"><div class="lbl">Pro fee, % of bill</div><div class="big" id="k_fee"></div><div class="delta" id="k_fee_d"></div></div>
+    <div class="card kpi"><div class="lbl">talabat profit (account)</div><div class="big" id="k_tgp"></div><div class="delta" id="k_tgp_d"></div></div>
+  </div>
+
+  <div class="grid pl" style="margin-bottom:16px">
+    <div class="card">
+      <h3>Brand money — a year ago vs selected</h3>
+      <table id="brandtbl"></table>
+      <details><summary>Show the math</summary><div class="math" id="brandmath"></div></details>
+    </div>
+    <div class="card">
+      <h3>talabat money (this account)</h3>
+      <table id="tlbtbl"></table>
+      <details><summary>Show the math</summary><div class="math" id="tlbmath"></div></details>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Brand profit across all options (AED / month)</h3>
+    <div class="bars" id="bars"></div>
+  </div>
+
+  <div class="card narrative">
+    <h3>What this means <span style="font-weight:400;text-transform:none;letter-spacing:0">— plain English</span></h3>
+    <div class="verdict" id="verdict"></div>
+    <div id="story"></div>
+    <details><summary>Show the simple math behind this option</summary><div class="math" id="scnmath"></div></details>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const F={orders:87000,aov:45,pro:0.12,comm:0.25,cofund:4,mktg:200000,cogs:0.30,tdel:12};
+const DEF={orders:112000,aov:46,pro:0.48,comm:0.25,cofund:4,incr:0.40,mktg:200000,roi:3.0};
+const C_COMM=0.245, C_FEE=3, D_AOV_TARGET=60;
+let S={...DEF}; const defectRate=0.10;
+const fmt=n=>(n<0?'(':'')+'AED '+Math.abs(Math.round(n)).toLocaleString()+(n<0?')':'');
+const fmt0=n=>(n<0?'(':'')+Math.abs(Math.round(n)).toLocaleString()+(n<0?')':'');
+const pct=n=>(n*100).toFixed(1)+'%';
+const pts=n=>(n>=0?'+':'')+(n*100).toFixed(1)+' pts';
+const rel=n=>(n>=0?'+':'')+(n*100).toFixed(0)+'%';
+
+function mktgOrders(mktg,roi,aov){return aov>0?mktg*roi/aov:0;}
+
+function brand(p){
+  const gmv=p.orders*p.aov, proG=gmv*p.pro, nonG=gmv-proG;
+  const pc=(p.procomm!=null?p.procomm:p.comm);
+  const commission=nonG*p.comm+proG*pc;
+  const cofund=p.orders*p.pro*p.cofund;
+  const mk=(p.mktg!=null?p.mktg:F.mktg);
+  const outflow=commission+cofund+mk, cogs=gmv*F.cogs, contrib=gmv-cogs-outflow;
+  return {gmv,orders:p.orders,mktgord:p.mktgord||0,commission,effcomm:commission/gmv,cofund,feePerBill:p.cofund/p.aov,mktg:mk,outflow,take:outflow/gmv,cogs,contrib,perOrder:contrib/p.orders};
+}
+function talabat(p){
+  const gmv=p.orders*p.aov, proG=gmv*p.pro, nonG=gmv-proG;
+  const pc=(p.procomm!=null?p.procomm:p.comm);
+  const commission=nonG*p.comm+proG*pc;
+  const cofund=p.orders*p.pro*p.cofund, delivery=p.orders*p.pro*F.tdel;
+  return {commission,cofund,delivery,gp:commission+cofund-delivery};
+}
+// Turn a slider STATE into model params: total orders = base demand + marketing-driven orders.
+function stateParams(st){const m=mktgOrders(st.mktg,st.roi,st.aov);
+  return {orders:st.orders+m,aov:st.aov,pro:st.pro,comm:st.comm,cofund:st.cofund,mktg:st.mktg,mktgord:m};}
+// Fixed reference anchors (independent of the live sliders)
+function baseParams(){return stateParams({orders:F.orders,aov:F.aov,pro:F.pro,comm:F.comm,cofund:F.cofund,mktg:F.mktg,roi:S.roi});}
+function nowParams(){return stateParams(DEF);}
+// Each scenario as a full slider STATE — clicking a button loads this into the sliders.
+function presetFor(scn){
+  if(scn==='base')return {...DEF,orders:F.orders,aov:F.aov,pro:F.pro,comm:F.comm,cofund:F.cofund,mktg:F.mktg};
+  if(scn==='cur')return {...DEF};
+  if(scn==='C')return {...DEF,comm:C_COMM,cofund:C_FEE};
+  if(scn==='D')return {...DEF,aov:D_AOV_TARGET};
+  if(scn==='A'){const tot=DEF.orders+mktgOrders(DEF.mktg,DEF.roi,DEF.aov);
+    const po=tot*DEF.pro, lost=po*DEF.incr+po*defectRate;
+    const nb=Math.round((tot-lost)-mktgOrders(DEF.mktg,DEF.roi,F.aov));
+    return {...DEF,pro:0,cofund:0,aov:F.aov,orders:nb};}
+}
+let activeScn='cur';
+
+function render(){
+  const sel=stateParams(S);
+  o_v.textContent=Number(S.orders).toLocaleString();
+  ord_hint.innerHTML=`Organic demand before marketing. With marketing ≈ <b>${fmt0(sel.orders)}</b> total orders/mo`;
+  a_v.textContent='AED '+S.aov.toFixed(1); p_v.textContent=pct(S.pro);
+  i_v.textContent=pct(S.incr); c_v.textContent=pct(S.comm); cf_v.textContent='AED '+S.cofund.toFixed(1);
+  m_v.textContent='AED '+Number(S.mktg).toLocaleString();
+  r_v.textContent=S.roi.toFixed(2)+'×';
+  mkt_hint.innerHTML=`Generates ≈ <b>${fmt0(mktgOrders(S.mktg,S.roi,S.aov))}</b> orders/mo at ${S.roi.toFixed(2)}× ROI &middot; a year ago: AED 200,000`;
+  roi_hint.innerHTML=`AED sales per AED 1 spent. Orders = spend × ROI ÷ bill. Applies to a year ago & every scenario.`;
+  fee_hint.innerHTML=`Pro fee = AED ${S.cofund.toFixed(1)} ÷ AED ${S.aov.toFixed(1)} bill = <b>${pct(S.cofund/S.aov)}</b> of each bill. Raise AOV to shrink it (Option D).`;
+
+  const baseB=brand(baseParams()),baseT=talabat(baseParams()),b=brand(sel),t=talabat(sel);
+  const NOWc=brand(nowParams()).contrib;
+
+  setKPI('k_take',pct(b.take),'k_take_d',b.take-baseB.take,pts,true);
+  setKPI('k_con',fmt(b.contrib),'k_con_d',b.contrib/baseB.contrib-1,rel,false);
+  setKPI('k_fee',pct(b.feePerBill),'k_fee_d',b.feePerBill-baseB.feePerBill,pts,true);
+  setKPI('k_tgp',fmt(t.gp),'k_tgp_d',t.gp/baseT.gp-1,rel,false);
+
+  const g=b.gmv;
+  brandtbl.innerHTML=row(['','a year ago','selected','% of GMV'],true)+
+    row(['Orders',fmt0(baseB.orders),fmt0(b.orders),'&mdash;'])+
+    rowSub(['&nbsp;&nbsp;of which marketing-driven',fmt0(baseB.mktgord),fmt0(b.mktgord),'&mdash;'])+
+    row(['Total sales (GMV)',fmt(baseB.gmv),fmt(b.gmv),'100.0%'])+
+    row(['&minus; Commission',fmt(-baseB.commission),fmt(-b.commission),pct(b.commission/g)])+
+    row(['&minus; Pro fee',fmt(-baseB.cofund),fmt(-b.cofund),pct(b.cofund/g)])+
+    row(['&minus; Marketing/discounts',fmt(-baseB.mktg),fmt(-b.mktg),pct(b.mktg/g)])+
+    row(['&minus; Food cost',fmt(-baseB.cogs),fmt(-b.cogs),pct(b.cogs/g)])+
+    row(["talabat's total cut",pct(baseB.take),pct(b.take),pct(b.take)])+
+    rowT(['Brand profit',fmt(baseB.contrib),fmt(b.contrib),pct(b.contrib/g)]);
+  brandmath.innerHTML=`<b>Selected option:</b><br>`+
+    `Marketing-driven orders = AED ${fmt0(b.mktg)} × ${S.roi.toFixed(2)} ÷ AED ${S.aov.toFixed(1)} = <code>${fmt0(b.mktgord)}</code> of the ${fmt0(b.orders)} total<br>`+
+    `Total sales = ${fmt0(b.orders)} orders × AED ${S.aov.toFixed(1)} = <code>${fmt(b.gmv)}</code><br>`+
+    `Commission = sales × ${pct(b.effcomm)} = <code>${fmt(b.commission)}</code><br>`+
+    `Pro fee = ${fmt0(b.orders)} × ${pct(S.pro)} Pro × AED ${S.cofund.toFixed(1)} = <code>${fmt(b.cofund)}</code> (${pct(b.cofund/g)} of GMV · ${pct(S.cofund/S.aov)} of each bill)<br>`+
+    `Marketing/discounts = <code>${fmt(b.mktg)}</code> (${pct(b.mktg/g)} of GMV)<br>`+
+    `Food cost = sales × 30% = <code>${fmt(b.cogs)}</code><br>`+
+    `<b>Profit = sales − commission − Pro fee − marketing − food = <code>${fmt(b.contrib)}</code></b>`;
+
+  tlbtbl.innerHTML=row(['','a year ago','selected'],true)+
+    row(['Commission',fmt(baseT.commission),fmt(t.commission)])+
+    row(['+ Pro fee received',fmt(baseT.cofund),fmt(t.cofund)])+
+    row(['&minus; Delivery cost on Pro',fmt(-baseT.delivery),fmt(-t.delivery)])+
+    rowT(['talabat profit',fmt(baseT.gp),fmt(t.gp)]);
+  tlbmath.innerHTML=`Commission = sales × ${pct(b.effcomm)} (here) = <code>${fmt(t.commission)}</code><br>`+
+    `Pro fee in = Pro orders × AED ${S.cofund.toFixed(1)} = <code>${fmt(t.cofund)}</code><br>`+
+    `Delivery out = Pro orders × AED 12 = <code>${fmt(t.delivery)}</code><br>`+
+    `<b>talabat profit = commission + Pro fee − delivery = <code>${fmt(t.gp)}</code></b><br>`+
+    `<span style="color:#6b7280">Note: talabat also earns Pro subscription money across the whole app (not counted here) — the real reason Pro pays off for talabat.</span>`;
+
+  const scns=[['base','A year ago'],['cur','Now'],['A','Drop Pro'],['C','Win-win'],['D','Grow AOV']];
+  const data=scns.map(([k,n])=>({n,k,v:brand(stateParams(presetFor(k))).contrib}));
+  const max=Math.max(...data.map(d=>d.v));
+  bars.innerHTML=data.map(d=>{const w=(d.v/max*100).toFixed(1);
+    const col=d.k==='A'?'var(--bad)':(d.k===activeScn?'var(--orange)':'#f0a25e');
+    return `<div class="barrow"><div>${d.n}${d.k===activeScn?' &#9656;':''}</div>
+      <div class="track"><div class="fill" style="width:${w}%;background:${col}">${fmt0(d.v)}</div></div>
+      <div style="text-align:right;font-weight:700">${rel(d.v/NOWc-1)} vs now</div></div>`;}).join('');
+
+  narrative(activeScn,b,t,baseB,baseT,NOWc);
+}
+function setKPI(id,txt,did,delta,fmtfn,isPts){
+  document.getElementById(id).textContent=txt;const el=document.getElementById(did);
+  el.textContent=fmtfn(delta)+' vs a year ago';el.className='delta '+(delta>=0?'up':'down');}
+function row(c,head){const tag=head?'th':'td';return `<tr>${c.map(x=>`<${tag}>${x}</${tag}>`).join('')}</tr>`;}
+function rowSub(c){return `<tr class="sub">${c.map(x=>`<td>${x}</td>`).join('')}</tr>`;}
+function rowT(c){return `<tr class="total">${c.map(x=>`<td>${x}</td>`).join('')}</tr>`;}
+
+function narrative(scn,b,t,baseB,baseT,NOWc){
+  const dcon=b.contrib-baseB.contrib,dtake=b.take-baseB.take;
+  let v='',s='',m='';
+  if(scn==='cur'){
+    v=`They&rsquo;re reading the wrong number <span class="pill bad">cut ${pts(dtake)}</span> <span class="pill good">profit ${rel(b.contrib/baseB.contrib-1)}</span>`;
+    s=`The Pro fee grew because Pro orders quadrupled — <b>not</b> because they spent more on marketing or discounts (those stayed flat). So talabat&rsquo;s total cut looks bigger (~${pct(b.take)}). But the 30 AED minimum lifts baskets and Pro brings loyal regulars, so orders grew <b>${rel(b.orders/baseB.orders-1)}</b>. Their <b>actual profit went up ${fmt(dcon)} (${rel(b.contrib/baseB.contrib-1)})</b>, and profit per order fell only ~AED ${(baseB.perOrder-b.perOrder).toFixed(2)}. <b>Talk to them about total profit, not the percentage.</b>`;
+    m=`A year ago: ${fmt(baseB.contrib)} profit. Now: ${fmt(b.contrib)}. Difference: <code>${fmt(dcon)}</code>.<br>Of the ${fmt0(b.orders)} orders, ${fmt0(b.mktgord)} come from marketing at ${S.roi.toFixed(2)}× ROI.<br>"Total cut %" = everything paid to talabat ÷ sales = ${fmt(b.outflow)} ÷ ${fmt(b.gmv)} = <code>${pct(b.take)}</code>.`;
+  } else if(scn==='A'){
+    v=`Option A — Drop Pro <span class="pill bad">market-share loss</span>`;
+    s=`The percentage cut &ldquo;improves&rdquo; to ${pct(b.take)} — but only because the valuable Pro orders leave. And they don&rsquo;t leave to nowhere: those loyal, high-spending Pro customers <b>switch to competitors who still offer Pro</b>. The brand loses app visibility and the lifetime value of its best regulars. In the model orders fall to ${fmt0(b.orders)} and profit drops to ${fmt(b.contrib)} (${rel(b.contrib/NOWc-1)} vs now) — and that is the <b>floor</b>, before counting the share handed to rivals. Recommend rejecting this ask.`;
+    m=`Orders fall from ~${fmt0(brand(nowParams()).orders)} (now) to <code>${fmt0(b.orders)}</code> as Pro orders' incremental & defecting share (~10%) leaves.<br>Profit = sales − food − (commission + marketing) = <code>${fmt(b.contrib)}</code>.`;
+  } else if(scn==='C'){
+    const relief=b.contrib-NOWc,costYr=(talabat(nowParams()).gp-t.gp)*12;
+    v=`Option C — Structured win-win <span class="pill good">recommended</span>`;
+    s=`<b>Both sides win.</b> Trim the Pro fee (AED ${DEF.cofund.toFixed(1)} → ${C_FEE.toFixed(1)}) and add a small commission rebate (${pct(DEF.comm)} → ${pct(C_COMM)}), both <b>growth-linked and reviewed quarterly</b>. The brand&rsquo;s cut drops to ~${pct(b.take)} and they get ~${fmt(relief)}/month back while keeping Pro and the orders + market share it protects. It costs talabat ~${fmt(costYr)}/year, and because it targets only the Pro fee — not every order — talabat protects its margin and keeps the account. That is the win-win, and because it is conditional and time-bound it is reversible.`;
+    m=`Pro-fee trim saves the brand: ${fmt0(b.orders*S.pro)} Pro orders × AED ${(DEF.cofund-C_FEE).toFixed(1)} = <code>${fmt(b.orders*S.pro*(DEF.cofund-C_FEE))}</code>/mo.<br>Commission rebate = (${pct(DEF.comm)} − ${pct(C_COMM)}) × sales = <code>${fmt((DEF.comm-C_COMM)*b.gmv)}</code>/mo.<br>Total relief ≈ <code>${fmt(relief)}</code>/mo; cut falls to ~${pct(b.take)}.<br>Cost to talabat ≈ <code>${fmt(costYr)}</code>/yr.`;
+  } else if(scn==='D'){
+    const relief=b.contrib-NOWc;
+    const feeBillNow=DEF.cofund/DEF.aov, feeBillD=DEF.cofund/D_AOV_TARGET;
+    const feeGmvNow=DEF.pro*DEF.cofund/DEF.aov, feeGmvD=DEF.pro*DEF.cofund/D_AOV_TARGET;
+    v=`Option D — Grow AOV <span class="pill good">grow out of it</span>`;
+    s=`<b>Don&rsquo;t cut the fee — shrink it by growing the bill.</b> Lift the average basket to <b>AED ${D_AOV_TARGET}</b> (bundles, upsell, a higher Pro minimum) — <b>marketing stays exactly where it is</b>. The Pro fee <b>stays AED ${DEF.cofund.toFixed(1)}</b>, but as a share of each bill it falls from <b>${pct(feeBillNow)} → ${pct(feeBillD)}</b> (and ${pct(feeGmvNow)} → ${pct(feeGmvD)} of GMV). Bigger baskets lift brand profit by ~<b>${fmt(relief)}/month</b> while keeping Pro, the commission rate <i>and</i> the fee untouched. <b>Raising AOV is what shrinks the fee percentage — no fee cut, no extra spend.</b>`;
+    m=`Pro fee per bill = AED ${DEF.cofund.toFixed(1)} ÷ AED ${DEF.aov.toFixed(1)} = <code>${pct(feeBillNow)}</code> → AED ${DEF.cofund.toFixed(1)} ÷ AED ${D_AOV_TARGET.toFixed(1)} = <code>${pct(feeBillD)}</code> &nbsp;(fee unchanged).<br>Pro fee % of GMV = ${pct(DEF.pro)} × AED ${DEF.cofund.toFixed(1)} ÷ AED ${D_AOV_TARGET.toFixed(1)} = <code>${pct(feeGmvD)}</code>.<br>Marketing unchanged at ${fmt0(DEF.mktg)}. Profit relief from bigger baskets ≈ <code>${fmt(relief)}</code>/mo.`;
+  } else {
+    v=`A year ago — the starting point`;
+    s=`Pro was just 12% of orders. talabat&rsquo;s cut ${pct(b.take)}, profit ${fmt(b.contrib)}. Of the ${fmt0(b.orders)} orders, ${fmt0(b.mktgord)} came from marketing at ${S.roi.toFixed(2)}× ROI. Use the buttons to walk forward to today and through each option.`;
+    m=`Marketing-driven orders = AED ${fmt0(b.mktg)} × ${S.roi.toFixed(2)} ÷ AED ${S.aov.toFixed(1)} = <code>${fmt0(b.mktgord)}</code>.<br>Profit = sales − food cost − everything paid to talabat = <code>${fmt(b.contrib)}</code>.`;
+  }
+  verdict.innerHTML=v; story.innerHTML=s; scnmath.innerHTML=m;
+}
+
+const map={orders:'orders',aov:'aov',mktg:'mktg',roi:'roi',pro:'pro',incr:'incr',comm:'comm',cofund:'cofund'};
+function syncSliders(){Object.keys(map).forEach(id=>{document.getElementById(id).value=S[id];});}
+Object.keys(map).forEach(id=>{const el=document.getElementById(id);el.value=S[id];
+  el.addEventListener('input',()=>{S[id]=parseFloat(el.value);activeScn='cur';setActive();render();});});
+document.querySelectorAll('.scn').forEach(btn=>btn.addEventListener('click',()=>{
+  activeScn=btn.dataset.s; S={...presetFor(activeScn)}; syncSliders(); setActive(); render();}));
+function setActive(){document.querySelectorAll('.scn').forEach(b=>b.classList.toggle('active',b.dataset.s===activeScn));}
+function reset(){activeScn='cur'; S={...DEF}; syncSliders(); setActive(); render();}
+document.getElementById('foot').innerHTML='Illustrative model. Click a scenario to load its settings into the sliders; the bar chart and the “vs a year ago” / “vs now” comparisons stay anchored to fixed reference points so the baseline never moves under you. Assumptions: food cost 30% of sales, talabat delivery cost AED 12 per Pro order, ~10% of loyal Pro members leave to competitors if Pro is dropped. Marketing/discounts earn orders through an adjustable ROI: orders = spend × ROI ÷ average bill (total orders = base demand + marketing-driven). Option C trims the Pro fee AED 4→3 and adds a small 0.5-point rebate, growth-linked and reviewed quarterly. Option D lifts the average bill to AED 60 with marketing unchanged; the AED 4 Pro fee is untouched but becomes a smaller share of each bill (4 ÷ AOV). Figures are directional, not a promise — change any input to test your own numbers.';
+reset();
+</script>
+</body>
+</html>
