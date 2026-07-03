@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>talabat Pro — Key Account Decision Calculator v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{--org:#FF5A00;--ink:#1a1a2e;--mut:#6b7280;--bg:#f7f7f9;--line:#e5e7eb;--good:#0a8f4e;--bad:#d92d20}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+header{background:var(--ink);color:#fff;padding:24px 0}
+.eyebrow{color:var(--org);font-weight:700;letter-spacing:.14em;font-size:11px;text-transform:uppercase}
+h1{font-size:24px;margin:6px 0 2px}
+header p{color:#c9cdd6;font-size:13px;max-width:820px}
+h2{font-size:17px;margin:24px 0 10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.scen{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.scen button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.scen button.on{background:var(--org);border-color:var(--org);color:#fff}
+label{display:block;font-size:12px;font-weight:600;margin:10px 0 0}
+input[type=range]{width:100%;accent-color:var(--org)}
+.hint{font-size:11px;color:var(--mut)}
+.kpi .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mut)}
+.kpi .val{font-size:24px;font-weight:800;margin:2px 0}
+.kpi .cmp{font-size:12px;color:var(--mut)}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}
+.up{background:#d1fadf;color:var(--good)}.dn{background:#fee4e2;color:var(--bad)}.nt{background:#eef0f3;color:#374151}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left}
+td.r,th.r{text-align:right}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.note{background:#fff8f3;border:1px solid #ffd8bf;border-left:4px solid var(--org);border-radius:8px;padding:12px 14px;font-size:13px;margin:14px 0}
+.rec{border:2px solid var(--good)}
+.chart{height:300px;position:relative}
+details{font-size:13px;margin-top:10px}
+summary{cursor:pointer;font-weight:600;color:var(--org)}
+footer{color:var(--mut);font-size:12px;margin-top:36px;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<header><div class="wrap" style="padding-top:0;padding-bottom:0">
+<div class="eyebrow">talabat Pro · Key Account strategy</div>
+<h1>Keep Pro. Protect the margin. — Decision calculator v2</h1>
+<p>The partner sees talabat's cut rising 30.5% → 32.7% of sales and asks to drop Pro or cut commission. This model shows <b>both sides of the table</b> — brand profit <i>and</i> talabat's account P&amp;L — under five options. Illustrative monthly model, AED. Every input is a slider; nothing here is a promise.</p>
+</div></header>
+<div class="wrap">
+
+<div class="scen" id="scen">
+<button data-s="ago">A year ago</button>
+<button class="on" data-s="now">Now — no change</button>
+<button data-s="a">A · Drop Pro</button>
+<button data-s="b">B · Cut commission</button>
+<button data-s="c">C · Structured win-win ★</button>
+<button data-s="d">D · Grow AOV to 60</button>
+</div>
+
+<div class="grid g2">
+<div class="card">
+<h2 style="margin-top:0">Inputs <span class="hint">(loaded by scenario, freely adjustable)</span></h2>
+<label>Total orders / month: <b id="vOrd"></b></label><input type="range" id="iOrd" min="60000" max="200000" step="1000">
+<label>Average bill (AED): <b id="vBill"></b> <span class="hint">30 AED Pro minimum lifts this</span></label><input type="range" id="iBill" min="35" max="70" step="0.5">
+<label>Pro share of orders: <b id="vPro"></b>% <span class="hint">12% a year ago → 48% now (+300%)</span></label><input type="range" id="iProSh" min="0" max="70" step="1">
+<label>Standard commission: <b id="vCom"></b>%</label><input type="range" id="iCom" min="15" max="35" step="0.1">
+<label>Pro fee per Pro order (AED): <b id="vFee"></b></label><input type="range" id="iFee" min="0" max="6" step="0.5">
+<label>Marketing &amp; discounts (AED): <b id="vMkt"></b> <span class="hint">held flat per the brief</span></label><input type="range" id="iMkt" min="0" max="500000" step="10000">
+<label>Marketing ROI (GMV multiple): <b id="vRoi"></b>×</label><input type="range" id="iRoi" min="1" max="6" step="0.1">
+<label>Food cost (% of sales): <b id="vFood"></b>%</label><input type="range" id="iFood" min="20" max="45" step="1">
+<hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+<label>If Pro is dropped — share of Pro orders lost (incremental volume + defection to rival Pro programs): <b id="vLost"></b>%</label><input type="range" id="iLost" min="10" max="80" step="5">
+<label>talabat delivery cost per Pro order (AED): <b id="vDel"></b> <span class="hint">talabat's P&amp;L only</span></label><input type="range" id="iDel" min="6" max="18" step="1">
+</div>
+
+<div>
+<div class="grid g3">
+<div class="card kpi"><div class="lbl">Brand profit / month</div><div class="val" id="kProfit"></div><div class="cmp" id="kProfitCmp"></div><span class="chip" id="kProfitChip"></span></div>
+<div class="card kpi"><div class="lbl">talabat total cut (% of sales)</div><div class="val" id="kCut"></div><div class="cmp">what the partner is reacting to</div><span class="chip nt" id="kCutChip"></span></div>
+<div class="card kpi"><div class="lbl">talabat net / month (this account)</div><div class="val" id="kTal"></div><div class="cmp">commission + Pro fees − Pro delivery cost</div><span class="chip" id="kTalChip"></span></div>
+</div>
+<div class="card" style="margin-top:14px">
+<h2 style="margin-top:0">Brand profit across the five options (AED / month)</h2>
+<div class="chart"><canvas id="cBar"></canvas></div>
+</div>
+</div>
+</div>
+
+<div class="grid g2" style="margin-top:14px">
+<div class="card">
+<h2 style="margin-top:0">Both sides of the table — all scenarios</h2>
+<table id="tAll"><thead><tr><th>Scenario</th><th class="r">Orders</th><th class="r">Brand profit</th><th class="r">vs now</th><th class="r">talabat net</th><th class="r">Cut %</th></tr></thead><tbody></tbody></table>
+<p class="hint" style="margin-top:8px">talabat net excludes Pro subscription revenue and non-Pro delivery economics — it is the account-level view of commission + fees − Pro delivery cost. B is modeled as a blanket cut of the commission to offset the Pro-driven rise (−2.2 pts).</p>
+</div>
+<div class="card">
+<h2 style="margin-top:0">Sensitivity — what "Drop Pro" really costs as defection varies</h2>
+<table id="tSens"><thead><tr><th class="r">% Pro orders lost</th><th class="r">Orders</th><th class="r">Brand profit</th><th class="r">vs now</th></tr></thead><tbody></tbody></table>
+<p class="hint" style="margin-top:8px">Even at the friendliest assumption the brand loses money by dropping Pro — and the lost orders reappear on competitor apps as ceded market share.</p>
+</div>
+</div>
+
+<div class="note" id="story"></div>
+
+<div class="card">
+<details open><summary>Show the math for the selected scenario</summary><div id="math" style="margin-top:10px;font-size:13px"></div></details>
+</div>
+
+<div class="grid g2" style="margin-top:14px">
+<div class="card rec">
+<h2 style="margin-top:0">Recommended path — C, with D as the growth track</h2>
+<table><tbody>
+<tr><td><b>C · Structured win-win</b></td><td>Trim the Pro fee 4 → 3 AED and add a 0.5-pt commission rebate — both growth-linked, reviewed quarterly, reversible. Targets the exact lever that caused the pain (the Pro fee), not the whole commission book.</td></tr>
+<tr><td><b>D · Grow AOV</b></td><td>Bundles, upsell and a higher minimum lift the bill toward AED 60 — the unchanged 4 AED fee shrinks from ~8.7% to ~6.7% of each bill and profit rises with no concession at all.</td></tr>
+<tr><td><b>Never open with B</b></td><td>A blanket commission cut discounts 100% of orders to fix a ~48% problem, is permanent, and sets precedent across every key account. Last-resort fallback only.</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<h2 style="margin-top:0">How to run the conversation</h2>
+<table><tbody>
+<tr><td>1</td><td><b>Reframe to total profit</b> — profit is up ~AED 365k/mo (+20%); the rising % hid a winning year.</td></tr>
+<tr><td>2</td><td><b>Validate with their data</b> — ask for Pro vs non-Pro AOV, frequency and retention cohorts to replace assumptions with facts.</td></tr>
+<tr><td>3</td><td><b>Show the floor</b> — walk scenario A live; let them move the defection slider themselves.</td></tr>
+<tr><td>4</td><td><b>Offer C, pilot for one quarter</b> — growth-linked, with agreed KPIs (orders, AOV, Pro share, profit/order).</td></tr>
+<tr><td>5</td><td><b>Open the D track in parallel</b> — menu engineering and bundles cost talabat nothing and help most.</td></tr>
+</tbody></table>
+</div>
+</div>
+
+<footer>Illustrative monthly model — assumptions marked as sliders; validate against account actuals (Pro vs non-Pro basket, frequency, cohort retention) before committing terms. · Prepared by Abdulrhman Shaikh Aljabal</footer>
+</div>
+
+<script>
+const S={
+ ago:{ord:100000,bill:45,pro:12,com:25,fee:4,mkt:200000,roi:3,food:30},
+ now:{ord:125000,bill:46,pro:48,com:25,fee:4,mkt:200000,roi:3,food:30},
+ a:  {ord:125000,bill:46,pro:48,com:25,fee:4,mkt:200000,roi:3,food:30,drop:true},
+ b:  {ord:125000,bill:46,pro:48,com:22.8,fee:4,mkt:200000,roi:3,food:30},
+ c:  {ord:125000,bill:46,pro:48,com:24.5,fee:3,mkt:200000,roi:3,food:30},
+ d:  {ord:125000,bill:60,pro:48,com:25,fee:4,mkt:200000,roi:3,food:30}
+};
+const NAMES={ago:'A year ago',now:'Now — no change',a:'A · Drop Pro',b:'B · Cut commission',c:'C · Win-win ★',d:'D · Grow AOV'};
+let cur='now';
+const $=id=>document.getElementById(id);
+const fmt=n=>'AED '+Math.round(n).toLocaleString();
+const ids={iOrd:'ord',iBill:'bill',iProSh:'pro',iCom:'com',iFee:'fee',iMkt:'mkt',iRoi:'roi',iFood:'food'};
+function calc(p,lost,del){
+ let orders=p.ord, pro=p.pro/100;
+ if(p.drop){const proOrd=p.ord*pro; orders=p.ord-proOrd*lost; pro=0;}
+ const proOrd=orders*pro, gmv=orders*p.bill;
+ const commission=gmv*p.com/100, proFee=proOrd*p.fee;
+ const brand=gmv-commission-proFee-p.mkt-gmv*p.food/100;
+ const cut=(commission+proFee+p.mkt)/gmv*100;
+ const tal=commission+proFee-proOrd*del;
+ return {orders,gmv,commission,proFee,brand,cut,tal,proOrd,mkt:p.mkt,food:gmv*p.food/100,bill:p.bill};
+}
+function readInputs(){const p={};for(const[i,k]of Object.entries(ids))p[k]=+$(i).value;p.drop=S[cur].drop;return p;}
+function setInputs(p){for(const[i,k]of Object.entries(ids))$(i).value=p[k];}
+let chart;
+function render(){
+ const lost=+$('iLost').value/100, del=+$('iDel').value;
+ $('vOrd').textContent=(+$('iOrd').value).toLocaleString();$('vBill').textContent=$('iBill').value;
+ $('vPro').textContent=$('iProSh').value;$('vCom').textContent=$('iCom').value;$('vFee').textContent=$('iFee').value;
+ $('vMkt').textContent=(+$('iMkt').value).toLocaleString();$('vRoi').textContent=$('iRoi').value;
+ $('vFood').textContent=$('iFood').value;$('vLost').textContent=Math.round(lost*100);$('vDel').textContent=del;
+ const p=readInputs(); const r=calc(p,lost,del);
+ const ago=calc(S.ago,lost,del), now=calc({...S.now},lost,del);
+ $('kProfit').textContent=fmt(r.brand);
+ const dAgo=(r.brand/ago.brand-1)*100, dNow=(r.brand/now.brand-1)*100;
+ $('kProfitCmp').textContent=`vs a year ago ${dAgo>=0?'+':''}${dAgo.toFixed(0)}% · vs now ${dNow>=0?'+':''}${dNow.toFixed(0)}%`;
+ const chip=$('kProfitChip');chip.textContent=dNow>=0?'▲ ahead of today':'▼ below today';chip.className='chip '+(dNow>=0?'up':'dn');
+ $('kCut').textContent=r.cut.toFixed(1)+'%';
+ $('kCutChip').textContent='a year ago: '+ago.cut.toFixed(1)+'%';
+ $('kTal').textContent=fmt(r.tal);
+ const tChip=$('kTalChip'),tD=(r.tal/now.tal-1)*100;tChip.textContent=(tD>=0?'+':'')+tD.toFixed(0)+'% vs now';tChip.className='chip '+(tD>=-0.5?'up':'dn');
+ // all-scenario table + chart
+ const rows=Object.keys(S).map(k=>({k,r:calc(S[k],lost,del)}));
+ $('tAll').querySelector('tbody').innerHTML=rows.map(({k,r:x})=>
+  `<tr${k===cur?' style="background:#fff8f3;font-weight:600"':''}><td>${NAMES[k]}</td><td class="r">${Math.round(x.orders).toLocaleString()}</td><td class="r">${fmt(x.brand)}</td><td class="r" style="color:${x.brand>=now.brand?'var(--good)':'var(--bad)'}">${((x.brand/now.brand-1)*100).toFixed(0)}%</td><td class="r">${fmt(x.tal)}</td><td class="r">${x.cut.toFixed(1)}%</td></tr>`).join('');
+ $('tSens').querySelector('tbody').innerHTML=[0.1,0.25,0.5,0.75].map(f=>{const x=calc(S.a,f,del);
+  return `<tr><td class="r">${f*100}%</td><td class="r">${Math.round(x.orders).toLocaleString()}</td><td class="r">${fmt(x.brand)}</td><td class="r" style="color:var(--bad)">${((x.brand/now.brand-1)*100).toFixed(0)}%</td></tr>`}).join('');
+ const stories={
+  ago:'The baseline. Pro was 12% of orders; the fee barely registered. Everything since is judged against this month.',
+  now:`Nothing changed — Pro simply grew to ${S.now.pro}% of orders, so the 4 AED fee lands on far more orders and the headline cut rose. But orders are up ~25% and brand profit is <b>${fmt(now.brand-ago.brand)} higher (+${((now.brand/ago.brand-1)*100).toFixed(0)}%)</b> than a year ago. The percentage looks worse; the money is better. Anchor the partner here.`,
+  a:`The partner's first ask. Removing Pro strips out the incremental Pro volume and hands loyal members to rivals that still offer Pro. At the current slider the brand loses <b>${fmt(now.brand-r.brand)}/month vs today</b>. The cut % "improves" only because the best orders left. This is the floor — recommend rejecting.`,
+  b:'A blanket commission cut discounts every order — including the ~52% non-Pro orders that were never the problem — is permanent, and sets precedent across the whole key-account book. It also fixes the wrong lever: the driver is the Pro fee, not the commission. Fallback only.',
+  c:`The recommendation. Trim the Pro fee 4→3 AED and add a 0.5-pt growth-linked rebate, reviewed quarterly. Relief lands exactly where the pain is, the deal is reversible, and both sides stay ahead: brand <b>+${fmt(r.brand-now.brand)}/mo vs now</b>, talabat keeps the account, Pro and its market share.`,
+  d:`The growth track. Lift the bill toward AED 60 via bundles/upsell/minimums — the unchanged fee shrinks as a share of each bill and profit rises the most of any option (<b>+${fmt(r.brand-now.brand)}/mo vs now</b>). No concession, no precedent. Run alongside C.`};
+ $('story').innerHTML=`<b>${NAMES[cur]}:</b> ${stories[cur]}`;
+ $('math').innerHTML=`GMV = ${Math.round(r.orders).toLocaleString()} orders × AED ${r.bill} = <b>${fmt(r.gmv)}</b><br>
+ − Commission (${p.com}%) = ${fmt(r.commission)}<br>
+ − Pro fee (${Math.round(r.proOrd).toLocaleString()} Pro orders × AED ${p.fee}) = ${fmt(r.proFee)}<br>
+ − Marketing &amp; discounts = ${fmt(r.mkt)} <span class="hint">(earns ≈ ${Math.round(p.mkt*p.roi/r.bill).toLocaleString()} of the orders above at ROI ${p.roi}×)</span><br>
+ − Food cost (${p.food}%) = ${fmt(r.food)}<br>
+ = <b>Brand profit ${fmt(r.brand)}</b> · Profit/order AED ${(r.brand/r.orders).toFixed(2)}<br><br>
+ <b>talabat side:</b> commission ${fmt(r.commission)} + Pro fees ${fmt(r.proFee)} − Pro delivery (${Math.round(r.proOrd).toLocaleString()} × AED ${del}) = <b>${fmt(r.tal)}</b> <span class="hint">(excl. Pro subscription revenue)</span>`;
+ const data=rows.map(x=>Math.round(x.r.brand));
+ if(chart){chart.data.datasets[0].data=data;chart.data.datasets[0].backgroundColor=rows.map(x=>x.k===cur?'#FF5A00':'#cbd5e1');chart.update();}
+ else chart=new Chart($('cBar'),{type:'bar',data:{labels:Object.values(NAMES),datasets:[{data,backgroundColor:rows.map(x=>x.k===cur?'#FF5A00':'#cbd5e1')}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'AED '+(v/1e6).toFixed(1)+'M'}}}}});
+}
+document.querySelectorAll('#scen button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('#scen button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+ cur=b.dataset.s;setInputs(S[cur]);render();});
+document.querySelectorAll('input[type=range]').forEach(i=>i.oninput=render);
+setInputs(S.now);render();
+</script>
+</body>
+</html>
